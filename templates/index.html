@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Visualizer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <label for="grid-size">Grid Size:</label>
+            <input type="number" id="grid-size" value="10"> <!-- Default grid size set to 10 -->
+            <button onclick="updateGridSize()">Update Grid</button>
+            <br>
+            <label for="kernel-size">Kernel Size:</label>
+            <input type="number" id="kernel-size" value="3"> <!-- Default kernel size set to 3 -->
+            <button onclick="updateKernelSize()">Update Kernel Size</button>
+            <br>
+            <label for="expression">Kernel Expression:</label>
+            <input type="text" id="expression" value="1 if (x-1)**2 + (y-1)**2 < 1 else 0">
+            <button onclick="applyExpression()">Apply Expression</button>
+            <br>
+            <button onclick="processStep()">Process Step</button>
+            <button onclick="togglePlay()">Play/Pause</button>
+            <button onclick="resetGrid()">Reset</button>
+            <button onclick="toggleDisplayMode()">Toggle Display Mode</button>
+        </div>
+        <div class="kernel-grid" id="kernel-grid"></div>
+        <div class="grids">
+            <div class="grid" id="number-grid"></div>
+            <div class="grid" id="processed-grid"></div>
+        </div>
+        <div class="math-graphic" id="math-graphic"></div>
+    </div>
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+</body>
+</html>
