@@ -62,7 +62,7 @@ def process_step():
     rows, cols = number_grid.shape
 
     if step_row < rows - kernel_size + 1:
-        if step_col < cols - kernel_size + 1:
+        if step_col < cols - kernel_size:
             roi = number_grid[step_row:step_row + kernel_size, step_col:step_col + kernel_size].astype(np.float32)
             processed_grid[step_row + half_kernel, step_col + half_kernel] = np.sum(roi * kernel)
             step_col += 1

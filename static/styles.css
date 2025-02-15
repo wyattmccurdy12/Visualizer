@@ -14,6 +14,36 @@ body {
     align-items: center;
 }
 
+.hamburger-menu {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+}
+
+.menu-icon {
+    font-size: 30px;
+    cursor: pointer;
+}
+
+#menu-toggle {
+    display: none;
+}
+
+.menu {
+    display: none;
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 10px;
+    position: absolute;
+    top: 40px;
+    left: 0;
+    z-index: 1;
+}
+
+#menu-toggle:checked + .menu-icon + .menu {
+    display: block;
+}
+
 .controls {
     margin-bottom: 20px;
 }

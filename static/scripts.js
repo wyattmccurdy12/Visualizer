@@ -126,13 +126,24 @@ function applyExpression() {
     }).then(fetchGridData);
 }
 
+function applyKernelEquation() {
+    const equation = document.getElementById('equation').value;
+    fetch('/apply_expression', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ expression: equation })
+    }).then(fetchGridData);
+}
+
 function processStep() {
     fetch('/process_step', {
         method: 'POST'
     }).then(fetchGridData);
 }
 
-function togglePlay() {
+function startPlay() {
     fetch('/toggle_play', {
         method: 'POST'
     }).then(response => response.json())
@@ -141,6 +152,12 @@ function togglePlay() {
               autoProcess();
           }
       });
+}
+
+function pausePlay() {
+    fetch('/toggle_play', {
+        method: 'POST'
+    }).then(response => response.json());
 }
 
 function autoProcess() {
@@ -162,7 +179,17 @@ function resetGrid() {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({ grid_size: 10 }) // Reset to default grid size
-    }).then(fetchGridData);
+    }).then(() => {
+        fetch('/get_grid')
+            .then(response => response.json())
+            .then(data => {
+                updateGridDisplay(data.number_grid, 'number-grid', data.display_mode);
+                updateGridDisplay(data.processed_grid, 'processed-grid', data.display_mode);
+                updateKernelOverlay(0, 0, data.number_grid.length, data.kernel_size); // Reset kernel position
+                updateKernelGrid(data.kernel, data.display_mode);
+                updateMathGraphic(0, 0, data.kernel_size, data.number_grid, data.kernel); // Reset math graphic
+            });
+    });
 }
 
 function toggleDisplayMode() {
