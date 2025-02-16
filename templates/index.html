@@ -20,9 +20,6 @@
                 <input type="number" id="kernel-size" value="3"> <!-- Default kernel size set to 3 -->
                 <button onclick="updateKernelSize()">Update Kernel Size</button>
                 <br>
-                <label for="expression">Kernel Expression:</label>
-                <textarea id="expression" rows="3" cols="30">1 if (x-1)**2 + (y-1)**2 < 1 else 0</textarea>
-                <button onclick="applyExpression()">Apply Expression</button>
                 <br>
                 <button onclick="resetGrid()">
                     <img id="reset-icon" src="{{ url_for('static', filename='reset-icon.png') }}" alt="Reset">
@@ -54,6 +51,7 @@
             <textarea id="equation" rows="3" cols="50">1 if (x-1)**2 + (y-1)**2 < 1 else 0</textarea>
             <button onclick="applyKernelEquation()">Apply Kernel Equation</button>
         </div>
+        <div id="math-graphic" class="math-graphic"></div>
     </div>
     <script src="{{ url_for('static', filename='scripts.js') }}"></script>
 </body>

@@ -17,6 +17,15 @@ display_mode = "numbers"  # Default display mode
 
 @app.route('/update_grid_size', methods=['POST'])
 def update_grid_size():
+    """
+    Updates the grid size based on the user's input.
+
+    This endpoint expects a JSON payload with a 'grid_size' field.
+    It updates the global grid_size, number_grid, and processed_grid variables.
+
+    Returns:
+        JSON response with a success message and the updated grid size, or an error message.
+    """
     global grid_size, number_grid, processed_grid
     data = request.json
     new_grid_size = data.get('grid_size', grid_size)
@@ -31,6 +40,15 @@ def update_grid_size():
 
 @app.route('/update_kernel_size', methods=['POST'])
 def update_kernel_size():
+    """
+    Updates the kernel size based on the user's input.
+
+    This endpoint expects a JSON payload with a 'kernel_size' field.
+    It updates the global kernel_size and kernel variables.
+
+    Returns:
+        JSON response with a success message and the updated kernel size, or an error message.
+    """
     global kernel_size, kernel
     data = request.json
     new_kernel_size = data.get('kernel_size', kernel_size)
@@ -43,9 +61,18 @@ def update_kernel_size():
 
 @app.route('/apply_expression', methods=['POST'])
 def apply_expression():
+    """
+    Applies a mathematical expression to generate a new kernel.
+
+    This endpoint expects a JSON payload with an 'expression' field.
+    It evaluates the expression to create a new kernel.
+
+    Returns:
+        JSON response with a success message and the updated kernel, or an error message.
+    """
     global kernel
     data = request.json
-    expression_str = data.get('expression', "1 if (x-1)**2 + (y-1)**2 < 1 else 0")
+    expression_str = data.get('expression')
     try:
         if "lambda" not in expression_str:
             expression_str = "lambda x, y: " + expression_str
@@ -54,9 +81,41 @@ def apply_expression():
         return jsonify({"message": "Kernel updated from expression", "kernel": kernel.tolist()}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+    
+def translate_expression(expression):
+    """
+    This is a helper function. It takes in a markup string representing a mathematical expression and 
+    turns it into a python expression that can be interpreted as part of a python lambda function.
+    
+    Args:
+        expression (str): The markup string representing the mathematical expression.
+        
+    Returns:
+        str: The translated Python expression.
+    """
+    # Example translation rules (you can expand this as needed)
+    translation_rules = {
+        '^': '**',  # Replace caret with double asterisk for exponentiation
+        'e^': 'exp'
+    }
+    
+    # Apply translation rules
+    for key, value in translation_rules.items():
+        expression = expression.replace(key, value)
+    
+    return expression
+
 
 @app.route('/process_step', methods=['POST'])
 def process_step():
+    """
+    Processes a single step of the kernel convolution on the number grid.
+
+    This endpoint updates the processed_grid based on the current kernel position.
+
+    Returns:
+        JSON response with the updated processed grid, step row, step column, and playing status.
+    """
     global step_row, step_col, playing, processed_grid
     half_kernel = kernel_size // 2
     rows, cols = number_grid.shape
@@ -78,18 +137,42 @@ def process_step():
 
 @app.route('/toggle_play', methods=['POST'])
 def toggle_play():
+    """
+    Toggles the playing status of the kernel convolution process.
+
+    This endpoint switches the playing status between True and False.
+
+    Returns:
+        JSON response with the updated playing status.
+    """
     global playing
     playing = not playing
     return jsonify({"playing": playing}), 200
 
 @app.route('/toggle_display_mode', methods=['POST'])
 def toggle_display_mode():
+    """
+    Toggles the display mode between 'numbers' and 'grayscale'.
+
+    This endpoint switches the display mode for the number grid.
+
+    Returns:
+        JSON response with the updated display mode.
+    """
     global display_mode
     display_mode = "grayscale" if display_mode == "numbers" else "numbers"
     return jsonify({"display_mode": display_mode}), 200
 
 @app.route('/get_grid', methods=['GET'])
 def get_grid():
+    """
+    Retrieves the current state of the number grid and processed grid.
+
+    This endpoint returns the number grid, processed grid, kernel size, display mode, and kernel.
+
+    Returns:
+        JSON response with the current grid data and settings.
+    """
     return jsonify({
         "number_grid": number_grid.tolist(),
         "processed_grid": processed_grid.tolist(),
@@ -102,6 +185,14 @@ def get_grid():
 
 @app.route('/')
 def index():
+    """
+    Renders the main HTML page.
+
+    This endpoint serves the index.html file.
+
+    Returns:
+        Rendered HTML template for the main page.
+    """
     return render_template('index.html')
 
 if __name__ == '__main__':

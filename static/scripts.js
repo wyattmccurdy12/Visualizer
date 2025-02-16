@@ -1,11 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM fully loaded and parsed");
     fetchGridData();
+    document.getElementById('equation-editor').addEventListener('input', updateEquationDisplay);
 });
 
+/**
+ * Fetches the grid data from the server and updates the display.
+ *
+ * This function makes a GET request to the '/get_grid' endpoint on the server.
+ * Upon receiving a successful response, it parses the JSON data and calls
+ * other functions to update the number grid, processed grid, kernel overlay,
+ * kernel grid, and math graphic on the webpage.
+ */
 function fetchGridData() {
     fetch('/get_grid')
         .then(response => response.json())
         .then(data => {
+            console.log("Grid data fetched", data);
             updateGridDisplay(data.number_grid, 'number-grid', data.display_mode);
             updateGridDisplay(data.processed_grid, 'processed-grid', data.display_mode);
             updateKernelOverlay(data.step_row, data.step_col, data.number_grid.length, data.kernel_size);
@@ -14,7 +25,17 @@ function fetchGridData() {
         });
 }
 
+/**
+ * Updates the display of a grid on the webpage.
+ *
+ * @param {number[][]} gridData - A 2D array representing the grid data.
+ * @param {string} elementId - The ID of the HTML element where the grid will be displayed.
+ * @param {string} displayMode - The display mode ('numbers' or 'grayscale').
+ *                              If 'numbers', the cell values are displayed as text.
+ *                              If 'grayscale', the cell values are displayed as grayscale intensities.
+ */
 function updateGridDisplay(gridData, elementId, displayMode) {
+    console.log("Updating grid display", elementId, displayMode);
     const gridElement = document.getElementById(elementId);
     gridElement.innerHTML = '';
     const gridSize = gridData.length;
@@ -36,7 +57,19 @@ function updateGridDisplay(gridData, elementId, displayMode) {
     });
 }
 
+/**
+ * Updates the kernel overlay on the number grid.
+ *
+ * This function adds a blue border to the cells in the number grid that
+ * correspond to the current kernel position.
+ *
+ * @param {number} stepRow - The current row index of the kernel.
+ * @param {number} stepCol - The current column index of the kernel.
+ * @param {number} gridSize - The size of the number grid.
+ * @param {number} kernelSize - The size of the kernel.
+ */
 function updateKernelOverlay(stepRow, stepCol, gridSize, kernelSize) {
+    console.log("Updating kernel overlay", stepRow, stepCol, gridSize, kernelSize);
     const gridElement = document.getElementById('number-grid');
     const halfKernel = Math.floor(kernelSize / 2);
 
@@ -51,7 +84,14 @@ function updateKernelOverlay(stepRow, stepCol, gridSize, kernelSize) {
     }
 }
 
+/**
+ * Updates the display of the kernel grid.
+ *
+ * @param {number[][]} kernel - A 2D array representing the kernel values.
+ * @param {string} displayMode - The display mode ('numbers' or 'grayscale').
+ */
 function updateKernelGrid(kernel, displayMode) {
+    console.log("Updating kernel grid", displayMode);
     const kernelGridElement = document.getElementById('kernel-grid');
     kernelGridElement.innerHTML = '';
     kernel.forEach(row => {
@@ -69,7 +109,17 @@ function updateKernelGrid(kernel, displayMode) {
     });
 }
 
+/**
+ * Updates the math graphic display with the current equation.
+ *
+ * @param {number} stepRow - The current row index of the kernel.
+ * @param {number} stepCol - The current column index of the kernel.
+ * @param {number} kernelSize - The size of the kernel.
+ * @param {number[][]} numberGrid - The number grid data.
+ * @param {number[][]} kernel - The kernel data.
+ */
 function updateMathGraphic(stepRow, stepCol, kernelSize, numberGrid, kernel) {
+    console.log("Updating math graphic", stepRow, stepCol, kernelSize);
     const mathGraphicElement = document.getElementById('math-graphic');
     let equation = '';
     for (let i = 0; i < kernelSize; i++) {
@@ -85,7 +135,11 @@ function updateMathGraphic(stepRow, stepCol, kernelSize, numberGrid, kernel) {
     mathGraphicElement.innerHTML = `Equation: ${equation}`;
 }
 
+/**
+ * Updates the grid size on the server and refreshes the grid data.
+ */
 function updateGridSize() {
+    console.log("Updating grid size");
     const gridSize = document.getElementById('grid-size').value;
     if (gridSize > 0 && gridSize <= 20) {
         fetch('/update_grid_size', {
@@ -100,7 +154,11 @@ function updateGridSize() {
     }
 }
 
+/**
+ * Updates the kernel size on the server and refreshes the grid data.
+ */
 function updateKernelSize() {
+    console.log("Updating kernel size");
     const kernelSize = document.getElementById('kernel-size').value;
     if (kernelSize > 0) {
         fetch('/update_kernel_size', {
@@ -115,18 +173,11 @@ function updateKernelSize() {
     }
 }
 
-function applyExpression() {
-    const expression = document.getElementById('expression').value;
-    fetch('/apply_expression', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ expression: expression })
-    }).then(fetchGridData);
-}
-
+/**
+ * Applies the kernel equation on the server and refreshes the grid data.
+ */
 function applyKernelEquation() {
+    console.log("Applying kernel equation");
     const equation = document.getElementById('equation').value;
     fetch('/apply_expression', {
         method: 'POST',
@@ -137,13 +188,21 @@ function applyKernelEquation() {
     }).then(fetchGridData);
 }
 
+/**
+ * Processes a single step on the server and refreshes the grid data.
+ */
 function processStep() {
+    console.log("Processing step");
     fetch('/process_step', {
         method: 'POST'
     }).then(fetchGridData);
 }
 
+/**
+ * Starts or resumes the automatic processing of steps on the server.
+ */
 function startPlay() {
+    console.log("Starting play");
     fetch('/toggle_play', {
         method: 'POST'
     }).then(response => response.json())
@@ -154,13 +213,21 @@ function startPlay() {
       });
 }
 
+/**
+ * Pauses the automatic processing of steps on the server.
+ */
 function pausePlay() {
+    console.log("Pausing play");
     fetch('/toggle_play', {
         method: 'POST'
     }).then(response => response.json());
 }
 
+/**
+ * Automatically processes steps on the server at a set interval.
+ */
 function autoProcess() {
+    console.log("Auto processing");
     fetch('/process_step', {
         method: 'POST'
     }).then(response => response.json())
@@ -172,7 +239,11 @@ function autoProcess() {
       });
 }
 
+/**
+ * Resets the grid to its default state.
+ */
 function resetGrid() {
+    console.log("Resetting grid");
     fetch('/update_grid_size', {
         method: 'POST',
         headers: {
@@ -192,7 +263,11 @@ function resetGrid() {
     });
 }
 
+/**
+ * Toggles the display mode between numbers and grayscale.
+ */
 function toggleDisplayMode() {
+    console.log("Toggling display mode");
     fetch('/toggle_display_mode', {
         method: 'POST'
     }).then(fetchGridData);
