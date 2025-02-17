@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grid Visualizer</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            tex2jax: {
+                inlineMath: [['$','$']],
+                processEscapes: true
+            },
+            skipStartupTypeset: true,
+            "fast-preview": {
+                disabled: true
+            }
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <script src="https://www.desmos.com/api/v1.6/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
 </head>
 <body>
     <div class="container">
@@ -47,8 +61,8 @@
             <div class="grid" id="processed-grid"></div>
         </div>
         <div class="equation-editor">
-            <label for="equation">Kernel Equation:</label>
-            <textarea id="equation" rows="3" cols="50">1 if (x-1)**2 + (y-1)**2 < 1 else 0</textarea>
+            <label for="equation-input">Kernel Equation:</label>
+            <div id="calculator" style="width: 600px; height: 400px;"></div>
             <button onclick="applyKernelEquation()">Apply Kernel Equation</button>
         </div>
         <div id="math-graphic" class="math-graphic"></div>

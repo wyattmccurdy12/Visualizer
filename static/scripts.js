@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded and parsed");
     fetchGridData();
-    document.getElementById('equation-editor').addEventListener('input', updateEquationDisplay);
+    initializeDesmosCalculator();
 });
 
 /**
@@ -171,6 +171,14 @@ function updateKernelSize() {
     } else {
         alert("Kernel size must be a positive integer");
     }
+}
+
+/**
+ * Initializes the Desmos calculator for the equation editor.
+ */
+function initializeDesmosCalculator() {
+    const elt = document.getElementById('calculator');
+    const calculator = Desmos.Calculator(elt);
 }
 
 /**
