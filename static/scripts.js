@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeDesmosCalculator();
 });
 
+let calculator; // Declare the calculator variable globally
+
 /**
  * Fetches the grid data from the server and updates the display.
  *
@@ -178,22 +180,25 @@ function updateKernelSize() {
  */
 function initializeDesmosCalculator() {
     const elt = document.getElementById('calculator');
-    const calculator = Desmos.Calculator(elt);
+    calculator = Desmos.Calculator(elt, {
+        graphpaper: false
+    });
+
 }
 
 /**
- * Applies the kernel equation on the server and refreshes the grid data.
+ * Logs the current state of the Desmos calculator.
  */
-function applyKernelEquation() {
-    console.log("Applying kernel equation");
-    const equation = document.getElementById('equation').value;
-    fetch('/apply_expression', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ expression: equation })
-    }).then(fetchGridData);
+function logCalculatorState() {
+    const state = calculator.getState();
+    console.log("Calculator state:", state);
+
+    // Log the latex expression state -> expressions[0] -> latex
+    if (state.expressions && state.expressions.list && state.expressions.list.length > 0) {
+        console.log("LaTeX expression:", state.expressions.list[0].latex);
+    } else {
+        console.log("No expressions found.");
+    }
 }
 
 /**
