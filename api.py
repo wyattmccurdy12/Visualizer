@@ -81,7 +81,17 @@ def apply_expression():
         return jsonify({"message": "Kernel updated from expression", "kernel": kernel.tolist()}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-    
+
+@app.route('/translate_expression', methods=['POST'])
+def translate_expression_endpoint():
+    data = request.json
+    expression = data.get('expression')
+    try:
+        translated_expression = translate_expression(expression)
+        return jsonify({"translated_expression": translated_expression}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 def translate_expression(expression):
     """
     This is a helper function. It takes in a markup string representing a mathematical expression and 
@@ -104,7 +114,6 @@ def translate_expression(expression):
         expression = expression.replace(key, value)
     
     return expression
-
 
 @app.route('/process_step', methods=['POST'])
 def process_step():

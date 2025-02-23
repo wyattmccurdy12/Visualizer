@@ -202,6 +202,29 @@ function logCalculatorState() {
 }
 
 /**
+ * Sends the LaTeX expression to the API.
+ */
+function sendLatexExpression() {
+    const state = calculator.getState();
+    if (state.expressions && state.expressions.list && state.expressions.list.length > 0) {
+        const latexExpression = state.expressions.list[0].latex;
+        console.log("Sending LaTeX expression to API:", latexExpression);
+        fetch('/translate_expression', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ expression: latexExpression })
+        }).then(response => response.json())
+          .then(data => {
+              console.log("Response from API:", data);
+          });
+    } else {
+        console.log("No expressions found to send.");
+    }
+}
+
+/**
  * Processes a single step on the server and refreshes the grid data.
  */
 function processStep() {

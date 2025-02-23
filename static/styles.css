@@ -26,7 +26,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 90%;
+    width: 80%; /* Adjusted width to 80% */
 }
 
 /* Remove hamburger menu styles */

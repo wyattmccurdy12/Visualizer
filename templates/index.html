@@ -21,51 +21,49 @@
     <script src="https://www.desmos.com/api/v1.6/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="hamburger-menu">
-            <input type="checkbox" id="menu-toggle">
-            <label for="menu-toggle" class="menu-icon">&#9776;</label>
-            <div class="menu">
-                <label for="grid-size">Grid Size:</label>
-                <input type="number" id="grid-size" value="10"> <!-- Default grid size set to 10 -->
-                <button onclick="updateGridSize()">Update Grid</button>
-                <br>
-                <label for="kernel-size">Kernel Size:</label>
-                <input type="number" id="kernel-size" value="3"> <!-- Default kernel size set to 3 -->
-                <button onclick="updateKernelSize()">Update Kernel Size</button>
-                <br>
-                <br>
-                <button onclick="resetGrid()">
-                    <img id="reset-icon" src="{{ url_for('static', filename='reset-icon.png') }}" alt="Reset">
-                </button>
-                <button onclick="toggleDisplayMode()">Toggle Display Mode</button>
-            </div>
-        </div>
-        <div class="controls">
-            <button onclick="processStep()">
-                <img id="step-icon" src="{{ url_for('static', filename='step-icon.png') }}" alt="Step">
-            </button>
-            <button onclick="startPlay()">
-                <img id="play-icon" src="{{ url_for('static', filename='play-icon.png') }}" alt="Play">
-            </button>
-            <button onclick="pausePlay()">
-                <img id="pause-icon" src="{{ url_for('static', filename='pause-icon.png') }}" alt="Pause">
-            </button>
+    <div class="main-container">
+        <div class="equation-editor">
+            <label for="equation-input">Kernel Equation:</label>
+            <div id="calculator" style="width: 100%; height: 400px;"></div>
+            <button onclick="logCalculatorState()">Log Calculator State</button>
+            <button onclick="sendLatexExpression()">Send LaTeX Expression</button>
+            <br>
+            <label for="grid-size">Grid Size:</label>
+            <input type="number" id="grid-size" value="10"> <!-- Default grid size set to 10 -->
+            <button onclick="updateGridSize()">Update Grid</button>
+            <br>
+            <label for="kernel-size">Kernel Size:</label>
+            <input type="number" id="kernel-size" value="3"> <!-- Default kernel size set to 3 -->
+            <button onclick="updateKernelSize()">Update Kernel Size</button>
+            <br>
+            <br>
             <button onclick="resetGrid()">
                 <img id="reset-icon" src="{{ url_for('static', filename='reset-icon.png') }}" alt="Reset">
             </button>
+            <button onclick="toggleDisplayMode()">Toggle Display Mode</button>
         </div>
-        <div class="kernel-grid" id="kernel-grid"></div>
-        <div class="grids">
-            <div class="grid" id="number-grid"></div>
-            <div class="grid" id="processed-grid"></div>
+        <div class="container">
+            <div class="controls">
+                <button onclick="processStep()">
+                    <img id="step-icon" src="{{ url_for('static', filename='step-icon.png') }}" alt="Step">
+                </button>
+                <button onclick="startPlay()">
+                    <img id="play-icon" src="{{ url_for('static', filename='play-icon.png') }}" alt="Play">
+                </button>
+                <button onclick="pausePlay()">
+                    <img id="pause-icon" src="{{ url_for('static', filename='pause-icon.png') }}" alt="Pause">
+                </button>
+                <button onclick="resetGrid()">
+                    <img id="reset-icon" src="{{ url_for('static', filename='reset-icon.png') }}" alt="Reset">
+                </button>
+            </div>
+            <div class="kernel-grid" id="kernel-grid"></div>
+            <div class="grids">
+                <div class="grid" id="number-grid"></div>
+                <div class="grid" id="processed-grid"></div>
+            </div>
+            <div id="math-graphic" class="math-graphic"></div>
         </div>
-        <div class="equation-editor">
-            <label for="equation-input">Kernel Equation:</label>
-            <div id="calculator" style="width: 600px; height: 400px;"></div>
-            <button onclick="applyKernelEquation()">Apply Kernel Equation</button>
-        </div>
-        <div id="math-graphic" class="math-graphic"></div>
     </div>
     <script src="{{ url_for('static', filename='scripts.js') }}"></script>
 </body>
