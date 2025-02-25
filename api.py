@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 import numpy as np
+import sympy as sp
+from latex2sympy2 import latex2sympy as lts
 
 app = Flask(__name__)
 
@@ -94,26 +96,21 @@ def translate_expression_endpoint():
 
 def translate_expression(expression):
     """
-    This is a helper function. It takes in a markup string representing a mathematical expression and 
-    turns it into a python expression that can be interpreted as part of a python lambda function.
+    This function takes in a LaTeX string representing a mathematical expression and 
+    converts it into a Python expression using latex2sympy.
     
     Args:
-        expression (str): The markup string representing the mathematical expression.
+        expression (str): The LaTeX string representing the mathematical expression.
         
     Returns:
         str: The translated Python expression.
     """
-    # Example translation rules (you can expand this as needed)
-    translation_rules = {
-        '^': '**',  # Replace caret with double asterisk for exponentiation
-        'e^': 'exp'
-    }
-    
-    # Apply translation rules
-    for key, value in translation_rules.items():
-        expression = expression.replace(key, value)
-    
-    return expression
+    try:
+        sympy_expr = lts(expression)
+        python_expr = sp.srepr(sympy_expr)
+        return python_expr
+    except Exception as e:
+        raise ValueError(f"Error translating expression: {e}")
 
 @app.route('/process_step', methods=['POST'])
 def process_step():
