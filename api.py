@@ -78,13 +78,22 @@ class VisualizerApp:
         self.kernel = np.fromfunction(kernel_func, (self.kernel_size, self.kernel_size))
 
     def latex_to_kernel(self, latex_expression):
-        # try:
-        sympy_expr = lts(latex_expression)
-        sympy_expr_str = str(sympy_expr)
-        self.kernel_from_expression(sympy_expr_str)
-        return {"kernel": self.kernel.tolist()}
-        # except Exception as e:
-            # return {"error": str(e)}
+        try:
+            # Convert LaTeX expression to SymPy expression
+            sympy_expr = lts(latex_expression)
+            
+            # Define the symbolic variables
+            x, y = sp.symbols('x y')
+            
+            # Convert the SymPy expression to a callable function
+            sympy_func = sp.lambdify((x, y), sympy_expr, 'numpy')
+            
+            # Generate the kernel using np.fromfunction
+            self.kernel = np.fromfunction(sympy_func, (self.kernel_size, self.kernel_size))
+            
+            return {"kernel": self.kernel.tolist()}
+        except Exception as e:
+            return {"error": str(e)}
 
     def latex_to_kernel_endpoint(self):
         data = request.json
