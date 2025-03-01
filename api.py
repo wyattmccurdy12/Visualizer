@@ -3,203 +3,139 @@ import numpy as np
 import sympy as sp
 from latex2sympy2 import latex2sympy as lts
 
-app = Flask(__name__)
+class VisualizerApp:
+    def __init__(self):
+        self.app = Flask(__name__)
+        self.grid_size = 10  # Default grid size set to 10
+        self.number_grid = np.zeros((self.grid_size, self.grid_size))
+        self.number_grid[:, self.grid_size // 2] = 1  # Vertical stripe of white on a black background
+        self.processed_grid = np.zeros_like(self.number_grid, dtype=np.float32)
+        self.kernel_size = 3
+        self.kernel = np.ones((self.kernel_size, self.kernel_size))  # Default kernel
+        self.step_row = 0
+        self.step_col = 0
+        self.playing = False
+        self.display_mode = "numbers"  # Default display mode
+        self.setup_routes()
 
-# Initialize global variables
-grid_size = 10  # Default grid size set to 10
-number_grid = np.zeros((grid_size, grid_size))
-number_grid[:, grid_size // 2] = 1  # Vertical stripe of white on a black background
-processed_grid = np.zeros_like(number_grid, dtype=np.float32)
-kernel_size = 3
-kernel = np.ones((kernel_size, kernel_size))  # Default kernel
-step_row = 0
-step_col = 0
-playing = False
-display_mode = "numbers"  # Default display mode
+    def setup_routes(self):
+        self.app.add_url_rule('/update_grid_size', 'update_grid_size', self.update_grid_size, methods=['POST'])
+        self.app.add_url_rule('/update_kernel_size', 'update_kernel_size', self.update_kernel_size, methods=['POST'])
+        self.app.add_url_rule('/apply_expression', 'apply_expression', self.apply_expression, methods=['POST'])
+        self.app.add_url_rule('/translate_expression', 'translate_expression', self.translate_expression, methods=['POST'])
+        self.app.add_url_rule('/process_step', 'process_step', self.process_step, methods=['POST'])
+        self.app.add_url_rule('/toggle_play', 'toggle_play', self.toggle_play, methods=['POST'])
+        self.app.add_url_rule('/toggle_display_mode', 'toggle_display_mode', self.toggle_display_mode, methods=['POST'])
+        self.app.add_url_rule('/get_grid', 'get_grid', self.get_grid, methods=['GET'])
+        self.app.add_url_rule('/latex_to_kernel', 'latex_to_kernel', self.latex_to_kernel_endpoint, methods=['POST'])
+        self.app.add_url_rule('/', 'index', self.index)
 
-@app.route('/update_grid_size', methods=['POST'])
-def update_grid_size():
-    """
-    Updates the grid size based on the user's input.
-
-    This endpoint expects a JSON payload with a 'grid_size' field.
-    It updates the global grid_size, number_grid, and processed_grid variables.
-
-    Returns:
-        JSON response with a success message and the updated grid size, or an error message.
-    """
-    global grid_size, number_grid, processed_grid
-    data = request.json
-    new_grid_size = data.get('grid_size', grid_size)
-    if 0 < new_grid_size <= 20:  # Limit grid size to a maximum of 20
-        grid_size = new_grid_size
-        number_grid = np.zeros((grid_size, grid_size))
-        number_grid[:, grid_size // 2] = 1  # Vertical stripe of white on a black background
-        processed_grid = np.zeros_like(number_grid, dtype=np.float32)
-        return jsonify({"message": "Grid size updated", "grid_size": grid_size}), 200
-    else:
-        return jsonify({"error": "Grid size must be a positive integer and less than or equal to 20"}), 400
-
-@app.route('/update_kernel_size', methods=['POST'])
-def update_kernel_size():
-    """
-    Updates the kernel size based on the user's input.
-
-    This endpoint expects a JSON payload with a 'kernel_size' field.
-    It updates the global kernel_size and kernel variables.
-
-    Returns:
-        JSON response with a success message and the updated kernel size, or an error message.
-    """
-    global kernel_size, kernel
-    data = request.json
-    new_kernel_size = data.get('kernel_size', kernel_size)
-    if new_kernel_size > 0:
-        kernel_size = new_kernel_size
-        kernel = np.ones((kernel_size, kernel_size))  # Reset kernel to ones
-        return jsonify({"message": "Kernel size updated", "kernel_size": kernel_size}), 200
-    else:
-        return jsonify({"error": "Kernel size must be a positive integer"}), 400
-
-@app.route('/apply_expression', methods=['POST'])
-def apply_expression():
-    """
-    Applies a mathematical expression to generate a new kernel.
-
-    This endpoint expects a JSON payload with an 'expression' field.
-    It evaluates the expression to create a new kernel.
-
-    Returns:
-        JSON response with a success message and the updated kernel, or an error message.
-    """
-    global kernel
-    data = request.json
-    expression_str = data.get('expression')
-    try:
-        if "lambda" not in expression_str:
-            expression_str = "lambda x, y: " + expression_str
-        kernel_func = eval(expression_str)
-        kernel = np.fromfunction(kernel_func, (kernel_size, kernel_size))
-        return jsonify({"message": "Kernel updated from expression", "kernel": kernel.tolist()}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-
-@app.route('/translate_expression', methods=['POST'])
-def translate_expression_endpoint():
-    data = request.json
-    expression = data.get('expression')
-    try:
-        translated_expression = translate_expression(expression)
-        return jsonify({"translated_expression": translated_expression}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-
-def translate_expression(expression):
-    """
-    This function takes in a LaTeX string representing a mathematical expression and 
-    converts it into a Python expression using latex2sympy.
-    
-    Args:
-        expression (str): The LaTeX string representing the mathematical expression.
-        
-    Returns:
-        str: The translated Python expression.
-    """
-    try:
-        sympy_expr = lts(expression)
-        python_expr = sp.srepr(sympy_expr)
-        return python_expr
-    except Exception as e:
-        raise ValueError(f"Error translating expression: {e}")
-
-@app.route('/process_step', methods=['POST'])
-def process_step():
-    """
-    Processes a single step of the kernel convolution on the number grid.
-
-    This endpoint updates the processed_grid based on the current kernel position.
-
-    Returns:
-        JSON response with the updated processed grid, step row, step column, and playing status.
-    """
-    global step_row, step_col, playing, processed_grid
-    half_kernel = kernel_size // 2
-    rows, cols = number_grid.shape
-
-    if step_row < rows - kernel_size + 1:
-        if step_col < cols - kernel_size:
-            roi = number_grid[step_row:step_row + kernel_size, step_col:step_col + kernel_size].astype(np.float32)
-            processed_grid[step_row + half_kernel, step_col + half_kernel] = np.sum(roi * kernel)
-            step_col += 1
+    def update_grid_size(self):
+        data = request.json
+        new_grid_size = data.get('grid_size', self.grid_size)
+        if 0 < new_grid_size <= 20:  # Limit grid size to a maximum of 20
+            self.grid_size = new_grid_size
+            self.number_grid = np.zeros((self.grid_size, self.grid_size))
+            self.number_grid[:, self.grid_size // 2] = 1  # Vertical stripe of white on a black background
+            self.processed_grid = np.zeros_like(self.number_grid, dtype=np.float32)
+            return jsonify({"message": "Grid size updated", "grid_size": self.grid_size}), 200
         else:
-            step_col = 0
-            step_row += 1
-    else:
-        playing = False
-        step_row = 0
-        step_col = 0
+            return jsonify({"error": "Grid size must be a positive integer and less than or equal to 20"}), 400
 
-    return jsonify({"processed_grid": processed_grid.tolist(), "step_row": step_row, "step_col": step_col, "playing": playing}), 200
+    def update_kernel_size(self):
+        data = request.json
+        new_kernel_size = data.get('kernel_size', self.kernel_size)
+        if new_kernel_size > 0:
+            self.kernel_size = new_kernel_size
+            self.kernel = np.ones((self.kernel_size, self.kernel_size))  # Reset kernel to ones
+            return jsonify({"message": "Kernel size updated", "kernel_size": self.kernel_size}), 200
+        else:
+            return jsonify({"error": "Kernel size must be a positive integer"}), 400
 
-@app.route('/toggle_play', methods=['POST'])
-def toggle_play():
-    """
-    Toggles the playing status of the kernel convolution process.
+    def apply_expression(self):
+        data = request.json
+        expression_str = data.get('expression')
+        try:
+            self.kernel_from_expression(expression_str)
+            return jsonify({"message": "Kernel updated from expression", "kernel": self.kernel.tolist()}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 400
 
-    This endpoint switches the playing status between True and False.
+    def translate_expression(self):
+        data = request.json
+        expression = data.get('expression')
+        try:
+            sympy_expr = lts(expression)
+            sympy_expr_str = str(sympy_expr)
+            return jsonify({"translated_expression": sympy_expr_str}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 400
 
-    Returns:
-        JSON response with the updated playing status.
-    """
-    global playing
-    playing = not playing
-    return jsonify({"playing": playing}), 200
+    def kernel_from_expression(self, expression):
+        if "lambda" not in expression:
+            expression = "lambda x, y: " + expression
+        kernel_func = eval(expression)
+        self.kernel = np.fromfunction(kernel_func, (self.kernel_size, self.kernel_size))
 
-@app.route('/toggle_display_mode', methods=['POST'])
-def toggle_display_mode():
-    """
-    Toggles the display mode between 'numbers' and 'grayscale'.
+    def latex_to_kernel(self, latex_expression):
+        # try:
+        sympy_expr = lts(latex_expression)
+        sympy_expr_str = str(sympy_expr)
+        self.kernel_from_expression(sympy_expr_str)
+        return {"kernel": self.kernel.tolist()}
+        # except Exception as e:
+            # return {"error": str(e)}
 
-    This endpoint switches the display mode for the number grid.
+    def latex_to_kernel_endpoint(self):
+        data = request.json
+        latex_expression = data.get('expression')
+        result = self.latex_to_kernel(latex_expression)
+        return jsonify(result)
 
-    Returns:
-        JSON response with the updated display mode.
-    """
-    global display_mode
-    display_mode = "grayscale" if display_mode == "numbers" else "numbers"
-    return jsonify({"display_mode": display_mode}), 200
+    def process_step(self):
+        half_kernel = self.kernel_size // 2
+        rows, cols = self.number_grid.shape
 
-@app.route('/get_grid', methods=['GET'])
-def get_grid():
-    """
-    Retrieves the current state of the number grid and processed grid.
+        if self.step_row < rows - self.kernel_size + 1:
+            if self.step_col < cols - self.kernel_size:
+                roi = self.number_grid[self.step_row:self.step_row + self.kernel_size, self.step_col:self.step_col + self.kernel_size].astype(np.float32)
+                self.processed_grid[self.step_row + half_kernel, self.step_col + half_kernel] = np.sum(roi * self.kernel)
+                self.step_col += 1
+            else:
+                self.step_col = 0
+                self.step_row += 1
+        else:
+            self.playing = False
+            self.step_row = 0
+            self.step_col = 0
 
-    This endpoint returns the number grid, processed grid, kernel size, display mode, and kernel.
+        return jsonify({"processed_grid": self.processed_grid.tolist(), "step_row": self.step_row, "step_col": self.step_col, "playing": self.playing}), 200
 
-    Returns:
-        JSON response with the current grid data and settings.
-    """
-    return jsonify({
-        "number_grid": number_grid.tolist(),
-        "processed_grid": processed_grid.tolist(),
-        "step_row": step_row,
-        "step_col": step_col,
-        "kernel_size": kernel_size,
-        "display_mode": display_mode,
-        "kernel": kernel.tolist()
-    }), 200
+    def toggle_play(self):
+        self.playing = not self.playing
+        return jsonify({"playing": self.playing}), 200
 
-@app.route('/')
-def index():
-    """
-    Renders the main HTML page.
+    def toggle_display_mode(self):
+        self.display_mode = "grayscale" if self.display_mode == "numbers" else "numbers"
+        return jsonify({"display_mode": self.display_mode}), 200
 
-    This endpoint serves the index.html file.
+    def get_grid(self):
+        return jsonify({
+            "number_grid": self.number_grid.tolist(),
+            "processed_grid": self.processed_grid.tolist(),
+            "step_row": self.step_row,
+            "step_col": self.step_col,
+            "kernel_size": self.kernel_size,
+            "display_mode": self.display_mode,
+            "kernel": self.kernel.tolist()
+        }), 200
 
-    Returns:
-        Rendered HTML template for the main page.
-    """
-    return render_template('index.html')
+    def index(self):
+        return render_template('index.html')
+
+    def run(self):
+        self.app.run(debug=True)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    visualizer_app = VisualizerApp()
+    visualizer_app.run()

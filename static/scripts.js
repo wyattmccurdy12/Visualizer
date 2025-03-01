@@ -202,14 +202,14 @@ function logCalculatorState() {
 }
 
 /**
- * Sends the LaTeX expression to the API.
+ * Sends the LaTeX expression to the API and updates the kernel grid.
  */
 function sendLatexExpression() {
     const state = calculator.getState();
     if (state.expressions && state.expressions.list && state.expressions.list.length > 0) {
         const latexExpression = state.expressions.list[0].latex;
         console.log("Sending LaTeX expression to API:", latexExpression);
-        fetch('/translate_expression', {
+        fetch('/latex_to_kernel', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -218,6 +218,11 @@ function sendLatexExpression() {
         }).then(response => response.json())
           .then(data => {
               console.log("Response from API:", data);
+              if (data.kernel) {
+                  updateKernelGrid(data.kernel, 'numbers'); // Update the kernel grid display
+              } else {
+                  console.error("Error from API:", data.error);
+              }
           });
     } else {
         console.log("No expressions found to send.");
